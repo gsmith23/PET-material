@@ -29,13 +29,13 @@
 #include "G4Event.hh"
 #include "G4ParticleGun.hh"
 #include "G4ParticleTable.hh"
-#include "G4IonTable.hh"
 #include "G4ParticleDefinition.hh"
-#include "G4ChargedGeantino.hh"
 #include "G4SystemOfUnits.hh"
 #include "Randomize.hh"
+#include "G4RandomDirection.hh"
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+// PGA
+// based on Tangle2's back2back photons
 
 BasicPrimaryGeneratorAction::BasicPrimaryGeneratorAction()
  : G4VUserPrimaryGeneratorAction(),
@@ -43,56 +43,53 @@ BasicPrimaryGeneratorAction::BasicPrimaryGeneratorAction()
 {
   G4int n_particle = 1;
   fParticleGun  = new G4ParticleGun(n_particle);
-  // default particle kinematic
-
-  G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
-  G4ParticleDefinition* particle
-                    = particleTable->FindParticle("chargedgeantino");
-  fParticleGun->SetParticleDefinition(particle);
-  fParticleGun->SetParticlePosition(G4ThreeVector(0.,0.,0.));
-  fParticleGun->SetParticleEnergy(1*eV);    
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(1.,0.,0.));
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+//
 
 BasicPrimaryGeneratorAction::~BasicPrimaryGeneratorAction()
 {
   delete fParticleGun;
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+//
 
 void BasicPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
-  G4ParticleDefinition* particle = fParticleGun->GetParticleDefinition();
-  if (particle == G4ChargedGeantino::ChargedGeantino()) {
-    //fluorine 
-    G4int Z = 9, A = 18;
-    G4double ionCharge   = 0.*eplus;
-    G4double excitEnergy = 0.*keV;
-    
-    G4ParticleDefinition* ion
-       = G4IonTable::GetIonTable()->GetIon(Z,A,excitEnergy);
-    fParticleGun->SetParticleDefinition(ion);
-    fParticleGun->SetParticleCharge(ionCharge);
-  }
+  G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
+  G4String particleName;
 
-  // randomized position
-  //
-  ///G4double x0  = 0*cm, y0  = 0*cm, z0  = 0*cm;
-  ///G4double dx0 = 0*cm, dy0 = 0*cm, dz0 = 0*cm;   
-  G4double x0  = 4*cm, y0  = 4*cm, z0  = 4*cm;
-  G4double dx0 = 1*cm, dy0 = 1*cm, dz0 = 1*cm; 
-  x0 += dx0*(G4UniformRand()-0.5);
-  y0 += dy0*(G4UniformRand()-0.5);
-  z0 += dz0*(G4UniformRand()-0.5);
-  fParticleGun->SetParticlePosition(G4ThreeVector(0,0,0));
-            
-  //create vertex
-  //
+  // get a vertex
+  G4double x0  = 0*cm, y0  = 0*cm, z0  = 0*cm;
+
+  G4ThreeVector random = G4RandomDirection();
+  G4ThreeVector photondir = random.unit();
+
+// For single positrons, uncomment this:
+
+  fParticleGun->SetParticleDefinition(particleTable->FindParticle(particleName="e+"));
+
+  fParticleGun->SetParticleEnergy(0*keV);
+  fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
   fParticleGun->GeneratePrimaryVertex(anEvent);
+
+// For b2b photons, uncomment this:
+/*
+  fParticleGun->SetParticleDefinition(particleTable->FindParticle(particleName="gamma"));
+
+  // photon 1
+
+  fParticleGun->SetParticleEnergy(511*keV);
+  fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
+  fParticleGun->SetParticleMomentumDirection(photondir);
+  fParticleGun->GeneratePrimaryVertex(anEvent);
+
+  // photon 2
+
+  fParticleGun->SetParticleEnergy(511*keV);
+  fParticleGun->SetParticlePosition(G4ThreeVector(x0,y0,z0));
+  fParticleGun->SetParticleMomentumDirection(-photondir);
+  fParticleGun->GeneratePrimaryVertex(anEvent);
+*/
 }
-
-
 //
