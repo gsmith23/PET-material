@@ -37,6 +37,8 @@
 #include "G4AutoDelete.hh"
 #include "G4MultiFunctionalDetector.hh"
 #include "G4PSEnergyDeposit.hh"
+#include "G4VPrimitiveScorer.hh"
+#include "G4PSDoseDeposit.hh"
 
 #include "G4SDManager.hh"
 #include "G4GenericMessenger.hh"
@@ -211,12 +213,18 @@ void BasicDetectorConstruction::ConstructSDandField()
   SetSensitiveDetector("Tube",detectorSD);
 
   // Make phantom a sensitive detector 
- /*
-  auto detectorSD
-    = new BasicPETSD("phantomSD", "DetectorHitsCollection");
+
+  G4MultiFunctionalDetector* patient = new G4MultiFunctionalDetector("patient");
+  G4VPrimitiveScorer* primitiv2 = new G4PSDoseDeposit("dose");
+  patient->RegisterPrimitive(primitiv2);
+  SetSensitiveDetector("Patient",patient);
+
+  /*
+  auto phantomSD
+    = new BasicPETSD("phantomSD", "PatientHitsCollection");
   G4SDManager::GetSDMpointer()->AddNewDetector(phantomSD);
   SetSensitiveDetector("Patient",phantomSD);
-*/
+  */
  
 }
 

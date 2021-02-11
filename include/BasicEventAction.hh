@@ -51,6 +51,7 @@ private:
   // data members
   BasicRunAction*  fRunAction;
   G4int  fDetHCID;
+  G4int fPhanHCID;
 };
 
 //

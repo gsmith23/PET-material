@@ -44,7 +44,8 @@
 BasicEventAction::BasicEventAction(BasicRunAction* runAction)
  : G4UserEventAction(),
    fRunAction(runAction),
-   fDetHCID(-1)
+   fDetHCID(-1),
+   fPhanHCID(-1)
 {}
 
 //
@@ -101,14 +102,29 @@ void BasicEventAction::EndOfEventAction(const G4Event* event)
       = G4SDManager::GetSDMpointer()->GetCollectionID("DetectorHitsCollection");
   }
 
+
+  // Get hits collections IDs (only once)
+  if ( fPhanHCID < 0 ) {
+    fPhanHCID
+      = G4SDManager::GetSDMpointer()->GetCollectionID("patient/dose");
+  }
+  G4int evtNb = event->GetEventID();
+
   // Get hits collections
   auto detHC = GetHitsCollection(fDetHCID, event);
+
+  auto phanHC = GetHitsCollection(fPhanHCID, event);
 
   // Get hit with total values
   auto detHit = (*detHC)[detHC->entries()-1];
 
+  auto phanHit = (*phanHC)[phanHC->entries()-1];
+
   // get deposited energy
   G4double dep = detHit->GetEdep();
+
+  G4double phandep = 3;
+  phanHit->GetEdep();
 
   // defining a Good Event
   G4double EnergyRes = 1.022*0.106;
@@ -126,6 +142,7 @@ void BasicEventAction::EndOfEventAction(const G4Event* event)
       dep, detHit->GetTrackLength());
   }
 
+  G4cout << " phandep = " << phandep << G4endl ;
 
   // get analysis manager
   auto analysisManager = G4AnalysisManager::Instance();
