@@ -36,6 +36,8 @@
 #include "G4HCofThisEvent.hh"
 #include "G4UnitsTable.hh"
 
+#include "G4THitsMap.hh"
+
 #include "Randomize.hh"
 #include <iomanip>
 
@@ -100,32 +102,53 @@ void BasicEventAction::EndOfEventAction(const G4Event* event)
   if ( fDetHCID == -1 ) {
     fDetHCID
       = G4SDManager::GetSDMpointer()->GetCollectionID("DetectorHitsCollection");
+    G4cout << "\n fDetHCID: " << fDetHCID << "\n" << G4endl;   
   }
-
 
   // Get hits collections IDs (only once)
   if ( fPhanHCID < 0 ) {
     fPhanHCID
-      = G4SDManager::GetSDMpointer()->GetCollectionID("patient/dose");
+      = G4SDManager::GetSDMpointer()->GetCollectionID("patient/edep");
+    G4cout << "\n fPhanHCID: " << fPhanHCID << "\n" << G4endl;   
   }
+  
   G4int evtNb = event->GetEventID();
+  
+  G4cout << G4endl << " evtNb = " << evtNb ;
 
   // Get hits collections
   auto detHC = GetHitsCollection(fDetHCID, event);
 
-  auto phanHC = GetHitsCollection(fPhanHCID, event);
+  // not used
+  //auto phanHC = GetHitsCollection(fPhanHCID, event);
 
   // Get hit with total values
   auto detHit = (*detHC)[detHC->entries()-1];
 
-  auto phanHit = (*phanHC)[phanHC->entries()-1];
+  // not used
+  //auto phanHit = (*phanHC)[phanHC->entries()-1];
 
   // get deposited energy
   G4double dep = detHit->GetEdep();
 
-  G4double phandep = 3;
-  phanHit->GetEdep();
-
+  // I have followed the code in B3bRun.ccc
+  //  
+  G4HCofThisEvent* HCE = event->GetHCofThisEvent();
+  if(!HCE) return;
+  
+  G4THitsMap<G4double>* evtMap = 
+    static_cast<G4THitsMap<G4double>*>(HCE->GetHC(fPhanHCID));
+  
+  std::map<G4int,G4double*>::iterator itr;
+  
+  for (itr = evtMap->GetMap()->begin(); itr != evtMap->GetMap()->end(); itr++) {
+    G4double edep = *(itr->second);
+    
+    G4int copyNb  = (itr->first);
+    //if (edep > 10.)
+    G4cout << G4endl << "  patient " << copyNb << ": " << edep/keV << " keV ";
+  }  
+  
   // defining a Good Event
   G4double EnergyRes = 1.022*0.106;
   G4double Threshold = (1.022 - EnergyRes)*MeV;
@@ -141,8 +164,6 @@ void BasicEventAction::EndOfEventAction(const G4Event* event)
     PrintEventStatistics(
       dep, detHit->GetTrackLength());
   }
-
-  G4cout << " phandep = " << phandep << G4endl ;
 
   // get analysis manager
   auto analysisManager = G4AnalysisManager::Instance();
