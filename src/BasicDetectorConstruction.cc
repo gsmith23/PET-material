@@ -211,12 +211,13 @@ void BasicDetectorConstruction::ConstructSDandField()
   SetSensitiveDetector("Tube",detectorSD);
 
   // Make phantom a sensitive detector 
-
+ /*
   auto detectorSD
     = new BasicPETSD("phantomSD", "DetectorHitsCollection");
   G4SDManager::GetSDMpointer()->AddNewDetector(phantomSD);
   SetSensitiveDetector("Patient",phantomSD);
-
+*/
+ 
 }
 
 //
